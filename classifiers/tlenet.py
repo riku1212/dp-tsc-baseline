@@ -1,17 +1,23 @@
 # t-leNet model: t-leNet + WW 
-import tensorflow.keras as keras
-import tensorflow as tf
-import numpy as np 
 import time
 
-from utils.utils import save_logs_t_leNet as save_logs
-from utils.utils import calculate_metrics
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
 
-class Classifier_TLENET:
+from classifiers.base import ClassifierBase
+from utils.utils import calculate_metrics
+from utils.utils import save_logs_t_leNet as save_logs
+
+
+NUMBER_OF_EPOCHS = 10 #1000
+BATCH_SIZE = 256
+
+
+class ClassifierTLENET(ClassifierBase):
     
-    def __init__(self, output_directory, verbose,build=True):
-        self.output_directory = output_directory
-        self.verbose = verbose
+    def __init__(self, output_directory, verbose):
+        super().__init__(output_directory, verbose)
         self.warping_ratios = [0.5,1,2]
         self.slice_ratio = 0.1
         
@@ -75,12 +81,7 @@ class Classifier_TLENET:
         model.compile(optimizer=keras.optimizers.Adam(lr=0.01,decay=0.005),
                       loss='categorical_crossentropy', metrics=['accuracy'])
         
-        file_path = self.output_directory+'best_model.hdf5'
-
-        model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss', 
-            save_best_only=True)
-        
-        self.callbacks=[model_checkpoint]
+        self.callbacks = [self.save_model()]
         
         return model
     
@@ -145,8 +146,8 @@ class Classifier_TLENET:
         if not tf.test.is_gpu_available:
             print('error')
             exit()
-        nb_epochs = 1000
-        batch_size= 256
+        nb_epochs = NUMBER_OF_EPOCHS
+        batch_size= BATCH_SIZE
         nb_classes = y_train.shape[1]
 
         # limit the number of augmented time series if series too long or too many 

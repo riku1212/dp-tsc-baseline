@@ -1,38 +1,42 @@
 # resnet model 
 # when tuning start with learning rate->mini_batch_size -> 
 # momentum-> #hidden_units -> # learning_rate_decay -> #layers 
-import tensorflow.keras as keras
-import tensorflow as tf
-import numpy as np
 import time
 
 import matplotlib
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
+
 from utils.utils import save_test_duration
 
 matplotlib.use('agg')
-import matplotlib.pyplot as plt
 
 from utils.utils import save_logs
 from utils.utils import calculate_metrics
+from classifiers.base import ClassifierBase
 
 
-class Classifier_RESNET:
+BATCH_SIZE = 64
+NUMBER_OF_EPOCHS = 10 #1500
+
+
+class ClassifierResnet(ClassifierBase):
 
     def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True, load_weights=False):
-        self.output_directory = output_directory
-        if build == True:
+        super().__init__(output_directory, verbose)
+        if build:
             self.model = self.build_model(input_shape, nb_classes)
-            if (verbose == True):
+            if verbose:
                 self.model.summary()
-            self.verbose = verbose
-            if load_weights == True:
+
+            if load_weights:
                 self.model.load_weights(self.output_directory
                                         .replace('resnet_augment', 'resnet')
                                         .replace('TSC_itr_augment_x_10', 'TSC_itr_10')
                                         + '/model_init.hdf5')
             else:
                 self.model.save_weights(self.output_directory + 'model_init.hdf5')
-        return
 
     def build_model(self, input_shape, nb_classes):
         n_feature_maps = 64
@@ -111,12 +115,7 @@ class Classifier_RESNET:
 
         reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
 
-        file_path = self.output_directory + 'best_model.hdf5'
-
-        model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
-                                                           save_best_only=True)
-
-        self.callbacks = [reduce_lr, model_checkpoint]
+        self.callbacks = [reduce_lr, self.save_model()]
 
         return model
 
@@ -125,8 +124,8 @@ class Classifier_RESNET:
             print('error')
             exit()
         # x_val and y_val are only used to monitor the test loss and NOT for training
-        batch_size = 64
-        nb_epochs = 1500
+        batch_size = BATCH_SIZE
+        nb_epochs = NUMBER_OF_EPOCHS
 
         mini_batch_size = int(min(x_train.shape[0] / 10, batch_size))
 

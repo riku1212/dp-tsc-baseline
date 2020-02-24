@@ -1,27 +1,29 @@
 # FCN model
 # when tuning start with learning rate->mini_batch_size ->
 # momentum-> #hidden_units -> # learning_rate_decay -> #layers
-import tensorflow.keras as keras
-import tensorflow as tf
-import numpy as np
 import time
 
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
+
+from classifiers.base import ClassifierBase
 from utils.utils import save_logs
-from utils.utils import calculate_metrics
 
-class Classifier_CNN:
+NUMBER_OF_EPOCHS = 10 # 2000
+BATCH_SIZE = 16
 
-    def __init__(self, output_directory, input_shape, nb_classes, verbose=False,build=True):
-        self.output_directory = output_directory
 
-        if build == True:
+class ClassifierCNN(ClassifierBase):
+
+    def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True):
+        super().__init__(output_directory, verbose)
+        if build:
             self.model = self.build_model(input_shape, nb_classes)
-            if (verbose == True):
+            if verbose:
                 self.model.summary()
-            self.verbose = verbose
-            self.model.save_weights(self.output_directory + 'model_init.hdf5')
 
-        return
+            self.model.save_weights(self.output_directory + 'model_init.hdf5')
 
     def build_model(self, input_shape, nb_classes):
         padding = 'valid'
@@ -45,12 +47,7 @@ class Classifier_CNN:
         model.compile(loss='mean_squared_error', optimizer=keras.optimizers.Adam(),
                       metrics=['accuracy'])
 
-        file_path = self.output_directory + 'best_model.hdf5'
-
-        model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
-                                                           save_best_only=True)
-
-        self.callbacks = [model_checkpoint]
+        self.callbacks = [self.save_model()]
 
         return model
 
@@ -60,8 +57,8 @@ class Classifier_CNN:
             exit()
 
         # x_val and y_val are only used to monitor the test loss and NOT for training
-        mini_batch_size = 16
-        nb_epochs = 2000
+        mini_batch_size = BATCH_SIZE
+        nb_epochs = NUMBER_OF_EPOCHS
 
         start_time = time.time()
 
@@ -82,14 +79,3 @@ class Classifier_CNN:
         save_logs(self.output_directory, hist, y_pred, y_true, duration,lr=False)
 
         keras.backend.clear_session()
-
-    def predict(self, x_test,y_true,x_train,y_train,y_test,return_df_metrics = True):
-        model_path = self.output_directory + 'best_model.hdf5'
-        model = keras.models.load_model(model_path)
-        y_pred = model.predict(x_test)
-        if return_df_metrics:
-            y_pred = np.argmax(y_pred, axis=1)
-            df_metrics = calculate_metrics(y_true, y_pred, 0.0)
-            return df_metrics
-        else:
-            return y_pred

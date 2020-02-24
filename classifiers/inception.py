@@ -1,36 +1,38 @@
-import tensorflow.keras as keras
-import tensorflow as tf
-import numpy as np
 import time
 
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
+
+from classifiers.base import ClassifierBase
 from utils.utils import save_logs
 from utils.utils import calculate_metrics
 from utils.utils import save_test_duration
 
+BATCH_SIZE = 64
+NUMBER_OF_EPOCHS = 10 # 1500
 
-class Classifier_INCEPTION:
 
-    def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True, batch_size=64, lr=0.001,
-                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=1500):
+class ClassifierInception(ClassifierBase):
 
-        self.output_directory = output_directory
+    def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True, batch_size=BATCH_SIZE, lr=0.001,
+                 nb_filters=32, use_residual=True, use_bottleneck=True, depth=6, kernel_size=41, nb_epochs=NUMBER_OF_EPOCHS):
 
+        super().__init__(output_directory, verbose)
         self.nb_filters = nb_filters
         self.use_residual = use_residual
         self.use_bottleneck = use_bottleneck
         self.depth = depth
         self.kernel_size = kernel_size - 1
-        self.callbacks = None
         self.batch_size = batch_size
         self.bottleneck_size = 32
         self.nb_epochs = nb_epochs
         self.lr = lr
-        self.verbose = verbose
-
-        if build == True:
+        if build:
             self.model = self.build_model(input_shape, nb_classes)
-            if (verbose == True):
+            if verbose:
                 self.model.summary()
+
             self.model.save_weights(self.output_directory + 'model_init.hdf5')
 
     def _inception_module(self, input_tensor, stride=1, activation='linear'):
@@ -63,7 +65,8 @@ class Classifier_INCEPTION:
         x = keras.layers.Activation(activation='relu')(x)
         return x
 
-    def _shortcut_layer(self, input_tensor, out_tensor):
+    @staticmethod
+    def _shortcut_layer(input_tensor, out_tensor):
         shortcut_y = keras.layers.Conv1D(filters=int(out_tensor.shape[-1]), kernel_size=1,
                                          padding='same', use_bias=False)(input_tensor)
         shortcut_y = keras.layers.BatchNormalization()(shortcut_y)
@@ -98,12 +101,7 @@ class Classifier_INCEPTION:
         reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50,
                                                       min_lr=0.0001)
 
-        file_path = self.output_directory + 'best_model.hdf5'
-
-        model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
-                                                           save_best_only=True)
-
-        self.callbacks = [reduce_lr, model_checkpoint]
+        self.callbacks = [reduce_lr, self.save_model()]
 
         return model
 
@@ -127,8 +125,7 @@ class Classifier_INCEPTION:
 
         self.model.save(self.output_directory + 'last_model.hdf5')
 
-        y_pred = self.predict(x_val, y_true, x_train, y_train, y_val,
-                              return_df_metrics=False)
+        y_pred = self.predict(x_val, y_true,False)
 
         # save predictions
         np.save(self.output_directory + 'y_pred.npy', y_pred)
@@ -142,10 +139,9 @@ class Classifier_INCEPTION:
 
         return df_metrics
 
-    def predict(self, x_test, y_true, x_train, y_train, y_test, return_df_metrics=True):
+    def predict(self, x_test, y_true,return_df_metrics=True):
         start_time = time.time()
-        model_path = self.output_directory + 'best_model.hdf5'
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(self.model_path)
         y_pred = model.predict(x_test, batch_size=self.batch_size)
         if return_df_metrics:
             y_pred = np.argmax(y_pred, axis=1)

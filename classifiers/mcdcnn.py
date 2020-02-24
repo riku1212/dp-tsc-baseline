@@ -1,26 +1,30 @@
 # FCN model
 # when tuning start with learning rate->mini_batch_size ->
 # momentum-> #hidden_units -> # learning_rate_decay -> #layers
-import tensorflow.keras as keras
-import numpy as np
-from sklearn.model_selection import train_test_split
 import time
+
+import numpy as np
 import tensorflow as tf
+import tensorflow.keras as keras
+from sklearn.model_selection import train_test_split
+
+from classifiers.base import ClassifierBase
 from utils.utils import save_logs
-from utils.utils import calculate_metrics
+
+BATCH_SIZE = 16
+NUMBER_OF_EPOCHS = 10 #120
 
 
-class Classifier_MCDCNN:
+class ClassifierMCDCNN(ClassifierBase):
 
-    def __init__(self, output_directory, input_shape, nb_classes, verbose=False,build=True):
-        self.output_directory = output_directory
-        if build == True:
+    def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True):
+        super().__init__(output_directory, verbose)
+        if build:
             self.model = self.build_model(input_shape, nb_classes)
-            if (verbose == True):
+            if verbose:
                 self.model.summary()
-            self.verbose = verbose
+
             self.model.save_weights(self.output_directory + 'model_init.hdf5')
-        return
 
     def build_model(self, input_shape, nb_classes):
         n_t = input_shape[0]
@@ -62,12 +66,7 @@ class Classifier_MCDCNN:
         model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.SGD(lr=0.01,momentum=0.9,decay=0.0005),
                       metrics=['accuracy'])
 
-        file_path = self.output_directory + 'best_model.hdf5'
-
-        model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='val_loss',
-                                                           save_best_only=True)
-
-        self.callbacks = [model_checkpoint]
+        self.callbacks = [self.save_model()]
 
         return model
 
@@ -85,8 +84,8 @@ class Classifier_MCDCNN:
         if not tf.test.is_gpu_available:
             print('error')
             exit()
-        mini_batch_size = 16
-        nb_epochs = 120
+        mini_batch_size = BATCH_SIZE
+        nb_epochs = NUMBER_OF_EPOCHS
 
         x_train, x_val, y_train, y_val = \
             train_test_split(x, y, test_size=0.33)
@@ -114,14 +113,3 @@ class Classifier_MCDCNN:
         save_logs(self.output_directory, hist, y_pred, y_true, duration,lr=False)
 
         keras.backend.clear_session()
-
-    def predict(self, x_test,y_true,x_train,y_train,y_test,return_df_metrics = True):
-        model_path = self.output_directory + 'best_model.hdf5'
-        model = keras.models.load_model(model_path)
-        y_pred = model.predict(self.prepare_input(x_test))
-        if return_df_metrics:
-            y_pred = np.argmax(y_pred, axis=1)
-            df_metrics = calculate_metrics(y_true, y_pred, 0.0)
-            return df_metrics
-        else:
-            return y_pred

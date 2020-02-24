@@ -1,27 +1,29 @@
 # MLP model 
-import tensorflow.keras as keras
-import tensorflow as tf
-import numpy as np
 import time
 
-import matplotlib 
-matplotlib.use('agg')
-import matplotlib.pyplot as plt 
-
+import matplotlib
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
+from classifiers.base import ClassifierBase
 from utils.utils import save_logs
-from utils.utils import calculate_metrics
 
-class Classifier_MLP:
+matplotlib.use('agg')
 
-	def __init__(self, output_directory, input_shape, nb_classes, verbose=False,build=True):
-		self.output_directory = output_directory
-		if build == True:
+BATCH_SIZE = 16
+NUMBER_OF_EPOCHS = 10 # 5000
+
+
+class ClassifierMLP(ClassifierBase):
+
+	def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True):
+		super().__init__(output_directory, verbose)
+		if build:
 			self.model = self.build_model(input_shape, nb_classes)
-			if(verbose==True):
+			if verbose:
 				self.model.summary()
-			self.verbose = verbose
+
 			self.model.save_weights(self.output_directory + 'model_init.hdf5')
-		return
 
 	def build_model(self, input_shape, nb_classes):
 		input_layer = keras.layers.Input(input_shape)
@@ -48,12 +50,7 @@ class Classifier_MLP:
 
 		reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=200, min_lr=0.1)
 
-		file_path = self.output_directory+'best_model.hdf5' 
-
-		model_checkpoint = keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss', 
-			save_best_only=True)
-
-		self.callbacks = [reduce_lr,model_checkpoint]
+		self.callbacks = [reduce_lr, self.save_model()]
 
 		return model
 
@@ -62,8 +59,8 @@ class Classifier_MLP:
 			print('error')
 			exit()
 		# x_val and y_val are only used to monitor the test loss and NOT for training  
-		batch_size = 16
-		nb_epochs = 5000
+		batch_size = BATCH_SIZE
+		nb_epochs = NUMBER_OF_EPOCHS
 
 		mini_batch_size = int(min(x_train.shape[0]/10, batch_size))
 
@@ -86,14 +83,3 @@ class Classifier_MLP:
 		save_logs(self.output_directory, hist, y_pred, y_true, duration)
 
 		keras.backend.clear_session()
-
-	def predict(self, x_test, y_true,x_train,y_train,y_test,return_df_metrics = True):
-		model_path = self.output_directory + 'best_model.hdf5'
-		model = keras.models.load_model(model_path)
-		y_pred = model.predict(x_test)
-		if return_df_metrics:
-			y_pred = np.argmax(y_pred, axis=1)
-			df_metrics = calculate_metrics(y_true, y_pred, 0.0)
-			return df_metrics
-		else:
-			return y_pred

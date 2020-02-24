@@ -1,17 +1,22 @@
 # MCNN model
-import tensorflow.keras as keras
-import tensorflow as tf
-import numpy as np 
 import time
 
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
+
+from classifiers.base import ClassifierBase
 from utils.utils import calculate_metrics
 from utils.utils import create_directory
 
-class Classifier_MCNN:
+
+NUMBER_OF_EPOCHS = 10 # 200
+
+
+class ClassifierMCNN(ClassifierBase):
 
     def __init__(self, output_directory, verbose, build=True):
-        self.output_directory = output_directory
-        self.verbose = verbose
+        super().__init__(output_directory, verbose)
         self.pool_factors = [2,3,5] # used for hyperparameters grid search
         self.filter_sizes = [0.05,0.1,0.2] # used for hyperparameters grid search 
 
@@ -136,7 +141,7 @@ class Classifier_MCNN:
     def train(self, x_train, y_train, x_test, y_test,y_true, pool_factor=None, filter_size=None,do_train=True):
         window_size = 0.2
         n_train_batch = 10
-        n_epochs = 200
+        n_epochs = NUMBER_OF_EPOCHS
         max_train_batch_size = 256
 
         # print('Original train shape: ', x_train.shape)
