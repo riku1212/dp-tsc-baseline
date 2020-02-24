@@ -72,7 +72,7 @@ def read_dataset(root_dir, archive_name, dataset_name):
                                        y_test.copy())
 
     elif archive_name == 'UCRArchive_2018':
-        root_dir_dataset = cur_root_dir + '/archives/' + archive_name + '/' + dataset_name + '/'
+        root_dir_dataset = cur_root_dir + '/archives/' + archive_name + '/' + dataset_name
         df_train = pd.read_csv(root_dir_dataset + '/' + dataset_name + '_TRAIN.tsv', sep='\t', header=None)
 
         df_test = pd.read_csv(root_dir_dataset + '/' + dataset_name + '_TEST.tsv', sep='\t', header=None)
