@@ -9,11 +9,11 @@ import os
 import numpy as np
 import sys
 import sklearn
-import utils
 from utils.constants import CLASSIFIERS
 from utils.constants import ARCHIVE_NAMES
 from utils.constants import ITERATIONS
 from utils.utils import read_all_datasets
+from utils.constants import dataset_names_for_archive
 
 
 def fit_classifier():
@@ -44,45 +44,82 @@ def fit_classifier():
     classifier.fit(x_train, y_train, x_test, y_test, y_true)
 
 
-def create_classifier(classifier_name, input_shape, nb_classes, output_directory, verbose=False):
+def create_classifier(classifier_name, input_shape, nb_classes, output_directory, verbose=True):
     if classifier_name == 'fcn':
         from classifiers import fcn
-        return fcn.Classifier_FCN(output_directory, input_shape, nb_classes, verbose)
+        return fcn.ClassifierFCN(output_directory, input_shape, nb_classes, verbose)
     if classifier_name == 'mlp':
         from classifiers import mlp
-        return mlp.Classifier_MLP(output_directory, input_shape, nb_classes, verbose)
+        return mlp.ClassifierMLP(output_directory, input_shape, nb_classes, verbose)
     if classifier_name == 'resnet':
         from classifiers import resnet
-        return resnet.Classifier_RESNET(output_directory, input_shape, nb_classes, verbose)
+        return resnet.ClassifierResnet(output_directory, input_shape, nb_classes, verbose)
     if classifier_name == 'mcnn':
         from classifiers import mcnn
-        return mcnn.Classifier_MCNN(output_directory, verbose)
+        return mcnn.ClassifierMCNN(output_directory, verbose)
     if classifier_name == 'tlenet':
         from classifiers import tlenet
-        return tlenet.Classifier_TLENET(output_directory, verbose)
+        return tlenet.ClassifierTLENET(output_directory, verbose)
     if classifier_name == 'twiesn':
         from classifiers import twiesn
-        return twiesn.Classifier_TWIESN(output_directory, verbose)
+        return twiesn.ClassifierTWIESN(output_directory, verbose)
     if classifier_name == 'encoder':
         from classifiers import encoder
-        return encoder.Classifier_ENCODER(output_directory, input_shape, nb_classes, verbose)
+        return encoder.ClassifierEncoder(output_directory, input_shape, nb_classes, verbose)
     if classifier_name == 'mcdcnn':
         from classifiers import mcdcnn
-        return mcdcnn.Classifier_MCDCNN(output_directory, input_shape, nb_classes, verbose)
+        return mcdcnn.ClassifierMCDCNN(output_directory, input_shape, nb_classes, verbose)
     if classifier_name == 'cnn':  # Time-CNN
         from classifiers import cnn
-        return cnn.Classifier_CNN(output_directory, input_shape, nb_classes, verbose)
+        return cnn.ClassifierCNN(output_directory, input_shape, nb_classes, verbose)
     if classifier_name == 'inception':
         from classifiers import inception
-        return inception.Classifier_INCEPTION(output_directory, input_shape, nb_classes, verbose)
+        return inception.ClassifierInception(output_directory, input_shape, nb_classes, verbose)
 
 
 ############################################### main
 
 # change this directory for your machine
-root_dir = '/b/home/uha/hfawaz-datas/dl-tsc-temp/'
+root_dir = os.environ['MODELPATH']
 
-if sys.argv[1] == 'run_all':
+if sys.argv[1] == 'sanity_check':
+    # all model run one dataset
+    for classifier_name in CLASSIFIERS:
+        # TODO: fix encoder, need tensorflow_addons
+        if classifier_name == 'encoder': continue
+        archive_name = sys.argv[2]
+        dataset_name = sys.argv[3]
+        itr = sys.argv[4]
+
+        if itr == '_itr_0':
+            itr = ''
+
+        output_directory = root_dir + '/results/' + classifier_name + '/' + archive_name + itr + '/' + \
+                           dataset_name + '/'
+        print(output_directory)
+
+        test_dir_df_metrics = output_directory + 'df_metrics.csv'
+
+        print('Method: ', archive_name, dataset_name, classifier_name, itr)
+
+        if os.path.exists(test_dir_df_metrics):
+            print('Already done')
+        else:
+
+            create_directory(output_directory)
+            datasets_dict = read_dataset(root_dir, archive_name, dataset_name)
+
+            print("fitting...")
+            fit_classifier()
+
+            print('DONE')
+
+            # the creation of this directory means
+            create_directory(output_directory + '/DONE')
+
+
+
+elif sys.argv[1] == 'run_all':
     for classifier_name in CLASSIFIERS:
         print('classifier_name', classifier_name)
 
@@ -100,7 +137,7 @@ if sys.argv[1] == 'run_all':
 
                 tmp_output_directory = root_dir + '/results/' + classifier_name + '/' + archive_name + trr + '/'
 
-                for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
+                for dataset_name in dataset_names_for_archive[archive_name]:
                     print('\t\t\tdataset_name: ', dataset_name)
 
                     output_directory = tmp_output_directory + dataset_name + '/'
