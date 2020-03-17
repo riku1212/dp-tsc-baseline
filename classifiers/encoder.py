@@ -10,7 +10,7 @@ from classifiers.base import ClassifierBase
 from utils.utils import save_logs
 
 BATCH_SIZE = 12
-NUMBER_OF_EPOCHS = 10 # 100
+NUMBER_OF_EPOCHS = 100
 
 
 class ClassifierEncoder(ClassifierBase):

@@ -57,7 +57,7 @@ ARCHIVE_NAMES = ['UCRArchive_2018']
 
 dataset_names_for_archive = {'UCRArchive_2018': UNIVARIATE_DATASET_NAMES_2018}
 
-CLASSIFIERS = ['fcn', 'mlp', 'resnet', 'tlenet', 'mcnn', 'twiesn', 'encoder', 'mcdcnn', 'cnn', 'inception']
+CLASSIFIERS = ['fcn', 'mlp', 'resnet', 'tlenet', 'mcnn', 'twiesn', 'encoder', 'mcdcnn', 'cnn', 'inception', 'lstm']
 
 dataset_types = {'ElectricDevices': 'DEVICE', 'FordB': 'SENSOR',
                  'FordA': 'SENSOR', 'NonInvasiveFatalECG_Thorax2': 'ECG',

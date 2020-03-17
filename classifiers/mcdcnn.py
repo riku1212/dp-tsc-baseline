@@ -12,7 +12,7 @@ from classifiers.base import ClassifierBase
 from utils.utils import save_logs
 
 BATCH_SIZE = 16
-NUMBER_OF_EPOCHS = 10 #120
+NUMBER_OF_EPOCHS = 120
 
 
 class ClassifierMCDCNN(ClassifierBase):

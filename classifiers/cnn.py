@@ -10,7 +10,7 @@ import tensorflow.keras as keras
 from classifiers.base import ClassifierBase
 from utils.utils import save_logs
 
-NUMBER_OF_EPOCHS = 10 # 2000
+NUMBER_OF_EPOCHS = 2000
 BATCH_SIZE = 16
 
 

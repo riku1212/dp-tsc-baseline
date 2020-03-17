@@ -75,6 +75,9 @@ def create_classifier(classifier_name, input_shape, nb_classes, output_directory
     if classifier_name == 'inception':
         from classifiers import inception
         return inception.ClassifierInception(output_directory, input_shape, nb_classes, verbose)
+    if classifier_name == 'lstm':
+        from classifiers import lstm
+        return lstm.ClassifierLSTM(output_directory, input_shape, nb_classes, verbose)
 
 
 ############################################### main
