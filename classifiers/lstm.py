@@ -25,13 +25,6 @@ class ClassifierLSTM(ClassifierBase):
 
     def build_model(self, input_shape, nb_classes):
         print(input_shape)
-        # model = tf.keras.Sequential([
-        #     tf.keras.layers.Input(shape=input_shape),
-        #     tf.keras.layers.Masking(),
-        #     tf.keras.layers.LSTM(units=128, activation='tanh'),
-        #     tf.keras.layers.Dropout(0.2),
-        #     tf.keras.layers.Dense(nb_classes, activation='softmax')
-        # ])
         input_layer = tf.keras.layers.Input(shape=input_shape)
         input_layer_masked = tf.keras.layers.Masking()(input_layer)
 
@@ -41,7 +34,7 @@ class ClassifierLSTM(ClassifierBase):
                                        activation='tanh'
                                        )(input_layer_masked)
 
-        output_layer = tf.keras.layers.LSTM(units=nb_classes,
+        output_layer = tf.keras.layers.LSTM(units=128,
                                             activation='tanh',
                                             return_sequences=False)(layer_1)
 
@@ -52,9 +45,9 @@ class ClassifierLSTM(ClassifierBase):
 
         loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True, reduction=tf.losses.Reduction.NONE)
         optimizer = DPAdamGaussianOptimizer(noise_multiplier=NOISE_MULTIPLIER,
-                                            l2_norm_clip=1.0,
+                                            l2_norm_clip=1.5,
                                             num_microbatches=60,
-                                            learning_rate=0.15)
+                                            learning_rate=0.001)
         model.compile(loss=loss, optimizer=optimizer,
                       metrics=['accuracy'])
 
