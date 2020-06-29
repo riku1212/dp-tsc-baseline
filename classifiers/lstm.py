@@ -11,6 +11,7 @@ NUMBER_OF_EPOCHS = 100
 BATCH_SIZE = 60
 NOISE_MULTIPLIER = 1.1
 
+
 class ClassifierLSTM(ClassifierBase):
 
     def __init__(self, output_directory, input_shape, nb_classes, verbose=False, build=True):
@@ -24,18 +25,26 @@ class ClassifierLSTM(ClassifierBase):
 
     def build_model(self, input_shape, nb_classes):
         print(input_shape)
+        # model = tf.keras.Sequential([
+        #     tf.keras.layers.Input(shape=input_shape),
+        #     tf.keras.layers.Masking(),
+        #     tf.keras.layers.LSTM(units=128, activation='tanh'),
+        #     tf.keras.layers.Dropout(0.2),
+        #     tf.keras.layers.Dense(nb_classes, activation='softmax')
+        # ])
         input_layer = tf.keras.layers.Input(shape=input_shape)
         input_layer_masked = tf.keras.layers.Masking()(input_layer)
 
         layer_1 = tf.keras.layers.LSTM(units=3,
-                                    input_shape=(input_shape),
-                                    return_sequences=True,
-                                    activation='tanh'
-                                    )(input_layer_masked)
+                                       input_shape=(input_shape),
+                                       return_sequences=True,
+                                       activation='tanh'
+                                       )(input_layer_masked)
 
         output_layer = tf.keras.layers.LSTM(units=nb_classes,
-                 activation='tanh',
-                 return_sequences=False)(layer_1)
+                                            activation='tanh',
+                                            return_sequences=False)(layer_1)
+
         output_layer = tf.keras.layers.Dropout(0.2)(output_layer)
         output_layer = tf.keras.layers.Dense(nb_classes, activation='softmax')(output_layer)
 
@@ -62,8 +71,6 @@ class ClassifierLSTM(ClassifierBase):
             print('error')
             exit()
         # x_val and y_val are only used to monitor the test loss and NOT for training
-        batch_size = BATCH_SIZE
-        nb_epochs = NUMBER_OF_EPOCHS
 
         # mini_batch_size = int(min(x_train.shape[0] / 10, batch_size))
 

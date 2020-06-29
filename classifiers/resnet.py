@@ -116,7 +116,7 @@ class ClassifierResnet(ClassifierBase):
         optimizer = DPAdamGaussianOptimizer(noise_multiplier=NOISE_MULTIPLIER,
                                             l2_norm_clip=1.0,
                                             num_microbatches=60,
-                                            learning_rate=0.15)
+                                            learning_rate=0.0001)
 
         model.compile(loss=loss, optimizer=optimizer,
                       metrics=['accuracy'])

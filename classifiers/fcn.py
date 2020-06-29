@@ -11,9 +11,11 @@ from utils.utils import save_logs
 
 from tensorflow_privacy.privacy.optimizers.dp_optimizer import DPAdamGaussianOptimizer
 
-NUMBER_OF_EPOCHS = 100  # 2000
+NUMBER_OF_EPOCHS = 10  # 2000
 BATCH_SIZE = 60
-NOISE_MULTIPLIER = 1.1
+NOISE_MULTIPLIER = 1.1 # note that this affects eps and accuracy.
+# if noise multiplier is small, accuracy increases but epsilon also. if noise increases, eps decreases but accuracy
+# drops
 
 class ClassifierFCN(ClassifierBase):
 
@@ -47,14 +49,14 @@ class ClassifierFCN(ClassifierBase):
 
         model = tf.keras.models.Model(inputs=input_layer, outputs=output_layer)
 
-        # loss = tf.tf.keras.losses.CategoricalCrossentropy()
-        # optimizer = tf.tf.keras.optimizers.Adam()
+        # loss = tf.keras.losses.CategoricalCrossentropy()
+        # optimizer = tf.keras.optimizers.Adam()
 
         loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True, reduction=tf.losses.Reduction.NONE)
         optimizer = DPAdamGaussianOptimizer(noise_multiplier=NOISE_MULTIPLIER,
-                                            l2_norm_clip=1.0,
+                                            l2_norm_clip=1.5,
                                             num_microbatches=60,
-                                            learning_rate=0.15)
+                                            learning_rate=0.001)
 
         model.compile(loss=loss, optimizer=optimizer,
                       metrics=['accuracy'])
