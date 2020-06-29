@@ -14,11 +14,13 @@ matplotlib.use('agg')
 
 from utils.utils import save_logs
 from utils.utils import calculate_metrics
-from classifiers.base import ClassifierBase
+from classifiers.base import ClassifierBase, ComputeRDP, compute_dp_sgd_privacy
+from tensorflow_privacy.privacy.optimizers.dp_optimizer import DPAdamGaussianOptimizer
 
 
-BATCH_SIZE = 64
+BATCH_SIZE = 60 #64
 NUMBER_OF_EPOCHS = 10 #1500
+NOISE_MULTIPLIER = 1.1
 
 
 class ClassifierResnet(ClassifierBase):
@@ -110,12 +112,21 @@ class ClassifierResnet(ClassifierBase):
 
         model = keras.models.Model(inputs=input_layer, outputs=output_layer)
 
-        model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Adam(),
+        loss = tf.keras.losses.CategoricalCrossentropy(from_logits=True, reduction=tf.losses.Reduction.NONE)
+        optimizer = DPAdamGaussianOptimizer(noise_multiplier=NOISE_MULTIPLIER,
+                                            l2_norm_clip=1.0,
+                                            num_microbatches=60,
+                                            learning_rate=0.15)
+
+        model.compile(loss=loss, optimizer=optimizer,
                       metrics=['accuracy'])
 
-        reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
+        # model.compile(loss='categorical_crossentropy', optimizer=keras.optimizers.Adam(),
+        #               metrics=['accuracy'])
 
-        self.callbacks = [reduce_lr, self.save_model()]
+        # reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
+        #
+        # self.callbacks = [reduce_lr, self.save_model()]
 
         return model
 
@@ -124,14 +135,14 @@ class ClassifierResnet(ClassifierBase):
             print('error')
             exit()
         # x_val and y_val are only used to monitor the test loss and NOT for training
-        batch_size = BATCH_SIZE
-        nb_epochs = NUMBER_OF_EPOCHS
 
-        mini_batch_size = int(min(x_train.shape[0] / 10, batch_size))
+        # mini_batch_size = int(min(x_train.shape[0] / 10, batch_size))
 
         start_time = time.time()
 
-        hist = self.model.fit(x_train, y_train, batch_size=mini_batch_size, epochs=nb_epochs,
+        self.callbacks = [ComputeRDP(BATCH_SIZE, len(x_train), NOISE_MULTIPLIER)]
+
+        hist = self.model.fit(x_train, y_train, batch_size=BATCH_SIZE, epochs=NUMBER_OF_EPOCHS,
                               verbose=self.verbose, validation_data=(x_val, y_val), callbacks=self.callbacks)
 
         duration = time.time() - start_time
