@@ -124,6 +124,7 @@ if sys.argv[1] == 'sanity_check':
 
 elif sys.argv[1] == 'run_all':
     for classifier_name in CLASSIFIERS:
+        if classifier_name != 'lstm' and classifier_name != 'fcn': continue
         print('classifier_name', classifier_name)
 
         for archive_name in ARCHIVE_NAMES:
@@ -146,6 +147,8 @@ elif sys.argv[1] == 'run_all':
                     output_directory = tmp_output_directory + dataset_name + '/'
 
                     create_directory(output_directory)
+                    create_directory(output_directory + '/dp/')
+                    create_directory(output_directory + '/normal/')
 
                     fit_classifier()
 

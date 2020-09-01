@@ -367,10 +367,10 @@ def save_logs_t_leNet(output_directory, hist, y_pred, y_true, duration):
 
 def save_logs(output_directory, hist, y_pred, y_true, duration, lr=True, y_true_val=None, y_pred_val=None):
     hist_df = pd.DataFrame(hist.history)
-    hist_df.to_csv(output_directory + 'history.csv', index=False)
+    hist_df.to_csv(output_directory / 'history.csv', index=False)
 
     df_metrics = calculate_metrics(y_true, y_pred, duration, y_true_val, y_pred_val)
-    df_metrics.to_csv(output_directory + 'df_metrics.csv', index=False)
+    df_metrics.to_csv(output_directory / 'df_metrics.csv', index=False)
 
     index_best_model = hist_df['loss'].idxmin()
     row_best_model = hist_df.loc[index_best_model]
@@ -387,12 +387,12 @@ def save_logs(output_directory, hist, y_pred, y_true, duration, lr=True, y_true_
         df_best_model['best_model_learning_rate'] = row_best_model['lr']
     df_best_model['best_model_nb_epoch'] = index_best_model
 
-    df_best_model.to_csv(output_directory + 'df_best_model.csv', index=False)
+    df_best_model.to_csv(output_directory / 'df_best_model.csv', index=False)
 
     # for FCN there is no hyperparameters fine tuning - everything is static in code
 
     # plot losses
-    plot_epochs_metric(hist, output_directory + 'epochs_loss.png')
+    plot_epochs_metric(hist, output_directory / 'epochs_loss.png')
 
     return df_metrics
 
