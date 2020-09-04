@@ -307,21 +307,23 @@ def generate_results_csv(output_file_name, root_dir):
                 if it != 0:
                     curr_archive_name = curr_archive_name + '_itr_' + str(it)
                 for dataset_name in datasets_dict.keys():
-                    output_dir = root_dir + '/results/' + classifier_name + '/' \
-                                 + curr_archive_name + '/' + dataset_name + '/' + 'df_metrics.csv'
-                    if not os.path.exists(output_dir):
-                        continue
-                    df_metrics = pd.read_csv(output_dir)
-                    df_metrics['classifier_name'] = classifier_name
-                    df_metrics['archive_name'] = archive_name
-                    df_metrics['dataset_name'] = dataset_name
-                    res = pd.concat((res, df_metrics), axis=0, sort=False)
+                    for status in ('dp', 'normal'):
+                        output_dir = root_dir + 'results/' + classifier_name + '/' \
+                                     + curr_archive_name + '/' + dataset_name + '/' + status + '/' + 'df_metrics.csv'
+                        if not os.path.exists(output_dir):
+                            continue
+                        df_metrics = pd.read_csv(output_dir)
+                        df_metrics['classifier_name'] = classifier_name
+                        df_metrics['archive_name'] = archive_name
+                        df_metrics['dataset_name'] = dataset_name
+                        df_metrics['status'] = status
+                        res = pd.concat((res, df_metrics), axis=0, sort=False)
 
     res.to_csv(root_dir + output_file_name, index=False)
-    # aggreagte the accuracy for iterations on same dataset
+    # aggregate the accuracy for iterations on same dataset
     res = pd.DataFrame({
         'accuracy': res.groupby(
-            ['classifier_name', 'archive_name', 'dataset_name'])['accuracy'].mean()
+            ['classifier_name', 'status', 'archive_name', 'dataset_name'])['accuracy'].mean()
     }).reset_index()
 
     return res
