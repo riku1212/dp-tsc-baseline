@@ -29,15 +29,15 @@ class ClassifierFCN(ClassifierBase):
         self.nb_classes = nb_classes
         if build:
             self.model_dp = self.build_model()
-            self.model = self.build_model(sgd=False)
+            # self.model = self.build_model(sgd=False)
             self.model_dp_path = PureWindowsPath(self.output_directory) / 'dp'
-            self.model_path = PureWindowsPath(self.output_directory) / 'normal'
+            # self.model_path = PureWindowsPath(self.output_directory) / 'normal'
             if verbose:
                 self.model_dp.summary()
-                self.model.summary()
+                # self.model.summary()
 
             self.model_dp.save_weights(str(self.model_dp_path / 'model_init.hdf5'))
-            self.model.save_weights(str(self.model_path / 'model_init.hdf5'))
+            # self.model.save_weights(str(self.model_path / 'model_init.hdf5'))
 
     def build_model(self, sgd=True):
         input_layer = tf.keras.layers.Input(self.input_shape)
@@ -102,24 +102,24 @@ class ClassifierFCN(ClassifierBase):
         save_logs(self.model_dp_path, hist, y_pred, y_true, duration, lr=False)
 
         # non-DP
-        stopped_epoch = len(hist.epoch)
+        # stopped_epoch = len(hist.epoch)
         # reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.00001)
-        self.callbacks = [self.save_model(str(self.model_path / 'best_model.hdf5'))]
-
-        start_time = time.time()
-        hist = self.model.fit(x_train, y_train, batch_size=BATCH_SIZE, epochs=stopped_epoch,
-                              verbose=self.verbose, validation_data=(x_val, y_val), callbacks=self.callbacks)
-        duration = time.time() - start_time
-
-        self.model.save(str(self.model_path / 'last_model.hdf5'))
-
-        model = tf.keras.models.load_model(str(self.model_path / 'best_model.hdf5'))
-
-        y_pred = model.predict(x_val)
+        # self.callbacks = [self.save_model(str(self.model_path / 'best_model.hdf5'))]
+        #
+        # start_time = time.time()
+        # hist = self.model.fit(x_train, y_train, batch_size=BATCH_SIZE, epochs=stopped_epoch,
+        #                       verbose=self.verbose, validation_data=(x_val, y_val), callbacks=self.callbacks)
+        # duration = time.time() - start_time
+        #
+        # self.model.save(str(self.model_path / 'last_model.hdf5'))
+        #
+        # model = tf.keras.models.load_model(str(self.model_path / 'best_model.hdf5'))
+        #
+        # y_pred = model.predict(x_val)
 
         # convert the predicted from binary to integer
-        y_pred = np.argmax(y_pred, axis=1)
+        # y_pred = np.argmax(y_pred, axis=1)
 
-        save_logs(self.model_path, hist, y_pred, y_true, duration, lr=False)
+        # save_logs(self.model_path, hist, y_pred, y_true, duration, lr=False)
 
         tf.keras.backend.clear_session()
