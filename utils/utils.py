@@ -132,8 +132,10 @@ def read_all_datasets(root_dir, archive_name, split_val=False):
             root_dir_dataset = cur_root_dir + '/archives/' + archive_name + '/' + dataset_name + '/'
 
             df_train = pd.read_csv(root_dir_dataset + '/' + dataset_name + '_TRAIN.tsv', sep='\t', header=None)
+            df_train = df_train.fillna(value=0)
 
             df_test = pd.read_csv(root_dir_dataset + '/' + dataset_name + '_TEST.tsv', sep='\t', header=None)
+            df_test = df_test.fillna(value=0)
 
             y_train = df_train.values[:, 0]
             y_test = df_test.values[:, 0]
